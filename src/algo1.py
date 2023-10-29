@@ -1,3 +1,5 @@
+import csv
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -127,11 +129,6 @@ def plot_crvs(data_points, title):
     plt.show()
 
 
-def plot_curves():
-    plot_crvs(data_points_c, 'Confined uniaxial stress-strain curves')
-    plot_crvs(data_points_a_c, 'Adjusted uniaxial stress-strain curves.')
-
-
 def take_inputs(sig_cu, sig_lmax, eps_cmax):
     # inputs
 
@@ -173,6 +170,27 @@ def take_inputs(sig_cu, sig_lmax, eps_cmax):
     return eps_c0, sig_cu, sig_lmax, E_c, eps_cu, eps_cmax
 
 
+def plot_curves():
+    plot_crvs(data_points_c, 'Confined uniaxial stress-strain curves')
+    plot_crvs(data_points_a_c, 'Adjusted uniaxial stress-strain curves.')
+
+
+def write_file(data_points, name_prefix):
+    # Write data points to CSV files
+    for sig_l, points in data_points.items():
+        filename = f'{name_prefix}_{sig_l}.csv'
+        with open(filename, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['x', 'y'])  # Write header
+            for x, y in points:
+                writer.writerow([x, y])  # Write data points
+
+
+def write_to_files():
+    write_file(data_points_c, 'curves_')
+    write_file(data_points_a_c, 'adjusted_curves_')
+
+
 if __name__ == '__main__':
     # initialize
     sig_l = 0
@@ -187,3 +205,4 @@ if __name__ == '__main__':
 
     run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, eps_cmax, v_c)
     plot_curves()
+    write_to_files()
