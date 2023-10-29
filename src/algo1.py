@@ -60,17 +60,22 @@ def delta_sig_l(__sig_l, __sig_cu):
         return 10.0 / 100.0 * __sig_cu
 
 
-def delta_eps_c(__eps_c0):
-    # TODO: fix me, assuming it is 10% of eps_c0
-    return 0.01 * __eps_c0
+def delta_eps_c(__eps_c, __eps_c0):
+    # TODO: fix me, assuming it is 1% of eps_c0
+    if not __eps_c:
+        return 0.001 * __eps_c0
+    else:
+        return 0.01 * __eps_c
 
 
-def run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, v_c):
+def run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, eps_cmax, v_c):
     if sig_l > sig_lmax:
         return  # TODO: return something
 
     sig_cc = eq_04__sig_cc(sig_cu, sig_l)
     eps_cc = eq_05__eq_07__eps_cc(sig_l, sig_cu, eps_c0)
+
+    # TODO: assumption sig=sig_cc
     r = eq_09__r(E_c, sig_cc, eps_cc)
 
     prev_sig_l = sig_l
@@ -81,13 +86,13 @@ def run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, v_c):
 
     while True:
         if eps_c > eps_cmax:
-            return run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, v_c)
+            return run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, eps_cmax, v_c)
 
         sig_c = eq_08__sig_c(sig_cc, eps_c, eps_c, eps_cc, r)
-        sig_u_c = sig_c  # TODO: fix me
-        eps_u_c = eps_c  # TODO: fix me
+        sig_u_c = sig_c  # TODO: assumption. fix me
+        eps_u_c = eps_c  # TODO: assumption. fix me. maybe it's correct. because in flowchart and equation 10. they are used interchangebly
 
-        if eps_c <= eps_cu:
+        if eps_c <= eps_cu and sig_c <= sig_cu:
             sig_a_c = sig_u_c
             eps_a_c = eq_11__eps_a_c(eps_u_c, eps_cc, eps_cu)
             eps_p_c = eq_24__eps_p_c(eps_c, sig_c, E_c, sig_l, v_c)
@@ -98,7 +103,7 @@ def run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, v_c):
                 eps_p_c = eq_24__eps_p_c(eps_c, sig_c, E_c, sig_l, v_c)
                 d = eq_15__d(sig_a_c, sig_cu)
 
-        eps_c = eps_c + delta_eps_c(eps_c0)
+        eps_c = eps_c + delta_eps_c(eps_c, eps_c0)
 
         # capture data points
         if prev_sig_l not in data_points_c:
@@ -110,28 +115,62 @@ def run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, v_c):
         data_points_a_c[prev_sig_l].append((eps_a_c, sig_a_c))
 
 
+def plot_crvs(data_points, title):
+    for sig_l, points in data_points.items():
+        x_vals, y_vals = zip(*points)
+        plt.plot(x_vals, y_vals, label=sig_l)
+
+    plt.legend()
+    plt.xlabel('Eps')
+    plt.ylabel('Sig')
+    plt.title(title)
+    plt.show()
+
+
 def plot_curves():
-    for sig_l, points in data_points_c.items():
-        x_vals, y_vals = zip(*points)
-        plt.plot(x_vals, y_vals, label=sig_l)
-
-    plt.legend()
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('Curves')
-    plt.show()
+    plot_crvs(data_points_c, 'Confined uniaxial stress-strain curves')
+    plot_crvs(data_points_a_c, 'Adjusted uniaxial stress-strain curves.')
 
 
-def plot_curves_adjusted():
-    for sig_l, points in data_points_a_c.items():
-        x_vals, y_vals = zip(*points)
-        plt.plot(x_vals, y_vals, label=sig_l)
+def take_inputs(sig_cu, sig_lmax, eps_cmax):
+    # inputs
 
-    plt.legend()
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('Adjusted Curves')
-    plt.show()
+    if not sig_cu:
+        inp = input('Please enter sig_cu: ')
+        if not inp:
+            raise ValueError('Please provide sig_cu')
+
+        sig_cu = np.float64(inp)
+    inp = None
+    # inp = input('Please enter E_c: ')
+    if inp:
+        E_c = np.float64(inp)
+    else:
+        # TODO: assumption
+        f_co = sig_cu
+        E_c = eq_34__E_c(f_co)
+
+    # inp = input('Please enter eps_c0: ')
+    if inp:
+        eps_c0 = np.float64(inp)
+    else:
+        eps_c0 = eq_06__eps_c0(sig_cu)
+
+    eps_cu = eps_c0
+
+    if not sig_lmax:
+        inp = input('Please enter sig_lmax: ')
+        if not inp:
+            raise ValueError('Please provide sig_lmax')
+        sig_lmax = np.float64(inp)
+
+    if not eps_cmax:
+        inp = input('Please enter eps_cmax: ')
+        if not inp:
+            raise ValueError('Please provide eps_cmax')
+        eps_cmax = np.float64(inp)
+
+    return eps_c0, sig_cu, sig_lmax, E_c, eps_cu, eps_cmax
 
 
 if __name__ == '__main__':
@@ -140,40 +179,11 @@ if __name__ == '__main__':
 
     # assumptions
     v_c = 0.2
+    sig_cu = 30.0
+    sig_lmax = 2
+    eps_cmax = 0.006
 
-    # inputs
-    inp = input('Please enter sig_cu: ')
-    if not inp:
-        raise ValueError('Please provide sig_cu')
+    eps_c0, sig_cu, sig_lmax, E_c, eps_cu, eps_cmax = take_inputs(sig_cu, sig_lmax, eps_cmax)
 
-    sig_cu = np.float64(inp)
-
-    inp = input('Please enter E_c: ')
-    if inp:
-        E_c = np.float64(inp)
-    else:
-        # TODO: assumption
-        f_co = sig_cu
-        E_c = eq_34__E_c(f_co)
-
-    inp = input('Please enter eps_c0: ')
-    if inp:
-        eps_c0 = np.float64(inp)
-    else:
-        eps_c0 = eq_06__eps_c0(sig_cu)
-
-    eps_cu = eps_c0
-
-    inp = input('Please enter sig_lmax: ')
-    if not inp:
-        raise ValueError('Please provide sig_lmax')
-    sig_lmax = np.float64(inp)
-
-    inp = input('Please enter eps_cmax: ')
-    if not inp:
-        raise ValueError('Please provide eps_cmax')
-    eps_cmax = np.float64(inp)
-
-    run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, v_c)
+    run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, eps_cmax, v_c)
     plot_curves()
-    plot_curves_adjusted()
