@@ -94,12 +94,13 @@ def run(eps_c0, sig_cu, sig_l, sig_lmax, E_c, eps_cu, eps_cmax, v_c):
         sig_u_c = sig_c  # TODO: assumption. fix me
         eps_u_c = eps_c  # TODO: assumption. fix me. maybe it's correct. because in flowchart and equation 10. they are used interchangebly
 
-        if sig_c > sig_cu:
-            # TODO: hack to save the curve from going above sig_cu
-            sig_c = sig_cu
-
         if eps_c <= eps_cu:
-            sig_a_c = sig_u_c
+            if sig_c > sig_cu:
+                # TODO: hack to save the curve from going above sig_cu
+                sig_a_c = sig_cu
+            else:
+                sig_a_c = sig_u_c
+
             eps_a_c = eq_11__eps_a_c(eps_u_c, eps_cc, eps_cu)
             eps_p_c = eq_24__eps_p_c(eps_c, sig_c, E_c, sig_l, v_c)
         else:
