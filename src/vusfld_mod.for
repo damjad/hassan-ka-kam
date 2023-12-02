@@ -19,7 +19,8 @@
      .          FIELD(nblock,nfieldv)
       character*80 cmname
 !-----Data from ABAQUS
-      dimension stressdata(maxblk*(NDIR+NSHR)), straindata(maxblk*(NDIR+NSHR))
+      dimension stressdata(maxblk*(NDIR+NSHR))
+      dimension straindata(maxblk*(NDIR+NSHR))
       integer jSData(maxblk*(NDIR+NSHR))
       character*3 cSData(maxblk*(NDIR+NSHR))
       integer jStatus
@@ -37,6 +38,8 @@
       real*8 d_eps_c_d_eps_l
       real*8 d_sig_c_d_eps_l
       real*8 d_eps_p_l_d_eps_p_c
+      real*8 r
+
 
       real*8 sig_1c(NBLOCK)
       real*8 sig_2c(NBLOCK)
@@ -145,7 +148,8 @@
                 sig_cc = eq_04__sig_cc(sig_cu, sig_l(i))
                 eps_cc = eq_05__eps_cc(sig_l(i), sig_cu, eps_c0)
                 r = eq_09__r(E_c, sig(i), eps_cc)
-                sig_c(i) = eq_08__sig_c(sig_cc, eps(i), eps_c, eps_cc, r)
+
+                sig_c(i) = eq_08__sig_c(sig_cc, eps(i), eps_c, eps_cc, r )
 
                 d_eps_c_d_eps_l = eq_21__d_eps_c_d_eps_l(sig_l, f_co, eps_l, eps_c0)
                 d_sig_c_d_eps_l = eq_19__d_sig_c_d_eps_l(r, sig_cc, eps_l, eps_cc, d_eps_c_d_eps_l)
@@ -242,7 +246,7 @@
           real*8 :: term1, term2, term3
 
           term1 = (0.85d0 + 6.8d0 * (sig_l / f_co))
-          term2 = (-0.525d0 * (1.0d0 + 0.75d0 * (-eps_l / eps_co)**0.3d0))
+          term2 = (-0.525d0 * (1.0d0 + 0.75d0 * (-eps_l / eps_co)**0.3d0 ))
           term3 = (-7.0d0 * exp(-7.0d0 * (-eps_l / eps_co)))
 
           eq_21__d_eps_c_d_eps_l = term1 * (term2 + term3)
@@ -270,7 +274,7 @@
             real*8 :: tan_si
             real*8, parameter :: rad_to_deg = 180.0d0 / acos(-1.0d0) ! Conversion factor from radians to degrees
 
-            tan_si = -3.0d0 / 2.0d0 * (1.0d0 + 2.0d0 * d_eps_p_l_d_eps_p_c) / (1.0d0 - d_eps_p_l_d_eps_p_c)
+            tan_si = -3.0d0 / 2.0d0 * (1.0d0 + 2.0d0 * d_eps_p_l_d_eps_p_c ) / ( 1.0d0 - d_eps_p_l_d_eps_p_c)
             eq_31__si = atan(tan_si) * rad_to_deg
       end function eq_31__si
 
