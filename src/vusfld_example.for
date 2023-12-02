@@ -112,10 +112,12 @@
 !     End of subroutine
 !-----------------------------------------------------------------------
       return
-      end
+      contains
 
       real*8 function maxi(first, second, third)
             implicit none
             real*8, intent(in) :: first, second, third
             maxi = max(first, second, third)
       end function maxi
+
+      end
